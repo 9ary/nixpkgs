@@ -47,7 +47,7 @@ case $1 in
 
     case $BACKEND in
         iptables)
-            ip46tables -I nixos-fw -p "$protocol" --dport "$port" -j nixos-fw-accept
+            ip46tables -I nixos-fw-allowed-ports-default -p "$protocol" --dport "$port" -j nixos-fw-accept
             ;;
         nftables)
             nft add element inet nixos-fw "temp-ports" "{ $protocol . $port }"
