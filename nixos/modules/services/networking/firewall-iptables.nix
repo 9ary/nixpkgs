@@ -153,14 +153,24 @@ let
     # Accept packets from established or related connections.
     ip46tables -A nixos-fw -m conntrack --ctstate ESTABLISHED,RELATED -j nixos-fw-accept
 
+    ${lib.concatStrings (
+      lib.map (
+        iface:
+          ''
+            ip46tables -N nixos-fw-allowed-ports-${iface}
+            ip46tables -A nixos-fw -j nixos-fw-allowed-ports-${iface} ${
+              lib.optionalString (iface != "default") "-i ${iface}"
+            }
+          ''
+      ) (lib.attrNames cfg.allInterfaces)
+    )}
+
     # Accept connections to the allowed TCP ports.
     ${lib.concatStrings (
       lib.mapAttrsToList (
         iface: cfg:
         lib.concatMapStrings (port: ''
-          ip46tables -A nixos-fw -p tcp --dport ${toString port} -j nixos-fw-accept ${
-            lib.optionalString (iface != "default") "-i ${iface}"
-          }
+          ip46tables -A nixos-fw-allowed-ports-${iface} -p tcp --dport ${toString port} -j nixos-fw-accept
         '') cfg.allowedTCPPorts
       ) cfg.allInterfaces
     )}
@@ -175,9 +185,7 @@ let
             range = toString rangeAttr.from + ":" + toString rangeAttr.to;
           in
           ''
-            ip46tables -A nixos-fw -p tcp --dport ${range} -j nixos-fw-accept ${
-              lib.optionalString (iface != "default") "-i ${iface}"
-            }
+            ip46tables -A nixos-fw-allowed-ports-${iface} -p tcp --dport ${range} -j nixos-fw-accept
           ''
         ) cfg.allowedTCPPortRanges
       ) cfg.allInterfaces
@@ -188,9 +196,7 @@ let
       lib.mapAttrsToList (
         iface: cfg:
         lib.concatMapStrings (port: ''
-          ip46tables -A nixos-fw -p udp --dport ${toString port} -j nixos-fw-accept ${
-            lib.optionalString (iface != "default") "-i ${iface}"
-          }
+          ip46tables -A nixos-fw-allowed-ports-${iface} -p udp --dport ${toString port} -j nixos-fw-accept
         '') cfg.allowedUDPPorts
       ) cfg.allInterfaces
     )}
@@ -205,9 +211,7 @@ let
             range = toString rangeAttr.from + ":" + toString rangeAttr.to;
           in
           ''
-            ip46tables -A nixos-fw -p udp --dport ${range} -j nixos-fw-accept ${
-              lib.optionalString (iface != "default") "-i ${iface}"
-            }
+            ip46tables -A nixos-fw-allowed-ports-${iface} -p udp --dport ${range} -j nixos-fw-accept
           ''
         ) cfg.allowedUDPPortRanges
       ) cfg.allInterfaces
