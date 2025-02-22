@@ -148,6 +148,16 @@ in
         '';
       };
 
+      dmzInterfaces = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        example = [ "dmz0" ];
+        description = ''
+          Interfaces for which ports must be opened explicitly via
+          {option}`networking.firewall.interfaces`.
+        '';
+      };
+
       allowPing = lib.mkOption {
         type = lib.types.bool;
         default = true;

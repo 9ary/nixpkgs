@@ -164,6 +164,14 @@ let
           ''
       ) (lib.attrNames cfg.allInterfaces)
     )}
+    ${lib.concatStrings (
+      lib.map (
+        iface:
+          ''
+            ip46tables -A nixos-fw-allowed-ports-default -j RETURN
+          ''
+      ) (lib.attrNames cfg.allInterfaces)
+    )}
 
     # Accept connections to the allowed TCP ports.
     ${lib.concatStrings (
